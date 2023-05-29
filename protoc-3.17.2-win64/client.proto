@@ -1,0 +1,11 @@
+syntax = "proto2";
+
+message TestC2S{
+	optional string val =1;
+	optional int64 index =2;
+}
+
+message TestS2C{
+	optional string val =1;
+	optional int64 index =2;
+}
