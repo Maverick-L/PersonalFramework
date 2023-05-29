@@ -3,13 +3,10 @@
 ################################################################################
 
 /Temp
-/ProjectSettings
-/PersonUnityProject.sln
 /Packages
 /obj
 /Logs
 /Library
-/Assembly-CSharp.csproj
 /.vsconfig
 /.vs
-/.csproj
+*.csproj
