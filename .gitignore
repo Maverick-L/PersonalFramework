@@ -9,6 +9,5 @@
 /Library
 /.vsconfig
 /.vs
-*.csproj
-/.csproj
+
 
