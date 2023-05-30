@@ -4,33 +4,37 @@ using UnityEngine;
 using System.IO;
 using UnityEngine.UI;
 
-public class UI_TextCreateEditor :BaseCreateEditor
+[GeneratorWindowAttrubity(EUINode.UI_Text)]
+public class UI_TextCreateEditor :BaseGeneratorEditor
 {
     private Text _text;
-    bool _have;
-    public UI_TextCreateEditor(GameObject go, StreamWriter writer) : base(go, writer) {
-        _have = TryGetContraller<Text>(out _text);
+    private string _fieldName;
+    public override void OnInit(GameObject go, StreamWriter write)
+    {
+        base.OnInit(go, write);
+        _fieldName = _myObj.name + "Text";
     }
     public override bool Check()
     {
-        return _myObj.GetComponent<Text>();
+        return TryGetContraller<Text>(out _text);
     }
 
-    public override void WriteField()
+    public override void WriteField(string tab)
     {
-        _write.WriteLine($"{_tab}public Text {_text.gameObject.name}Text;");
+        _write.WriteLine($"{tab}public Text {_fieldName};");
+
     }
 
-    public override void WriteAssignment()
+    public override void WriteValuation(string tab)
     {
-        
+        _write.WriteLine($"{tab}{_fieldName} = transform.Find({_findPath}).GetComponent<Text>();");
     }
-
-    public override void WriteMethod()
+    public override void WriteMethod(string tab)
     {
-        _write.WriteLine($"{_tab}public void Set{_text.gameObject.name}(string value)");
-        _write.WriteLine($"{_tab}" + "{");
-        _write.WriteLine($"{_tab}{_tab}");
-        _write.WriteLine($"{_tab}" + "}");
+        _write.WriteLine($"{tab}public void Set{_fieldName}Text(string value)");
+        _write.WriteLine($"{tab}{{");
+        _write.WriteLine($"{tab}{_tab}{ _fieldName}.text = value;");
+        _write.WriteLine($"{tab}}}");
+
     }
 }
