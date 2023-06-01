@@ -8,7 +8,7 @@ using System.Reflection;
 
 public class GeneratorUIWIndowEditor
 {
-    public static readonly string UI_CLASS_SAVE_PATH = Application.dataPath + "/Script/AutoUI";
+    public static readonly string UI_CLASS_SAVE_PATH = Application.dataPath + "/Script/Demo/MVCExample/AutoUI";
 
     public static void OnStartCreate(GameObject target)
     {
