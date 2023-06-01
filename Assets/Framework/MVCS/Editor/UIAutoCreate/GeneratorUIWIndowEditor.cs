@@ -8,7 +8,8 @@ using System.Reflection;
 
 public class GeneratorUIWIndowEditor
 {
-    public static readonly string UI_CLASS_SAVE_PATH = Application.dataPath + "Script/AutoUI";
+    public static readonly string UI_CLASS_SAVE_PATH = Application.dataPath + "/Script/AutoUI";
+
     public static void OnStartCreate(GameObject target)
     {
         string classPath = Path.Combine(UI_CLASS_SAVE_PATH, target.name + ".cs");
@@ -17,20 +18,32 @@ public class GeneratorUIWIndowEditor
         {
             Directory.CreateDirectory(UI_CLASS_SAVE_PATH);
         }
-        if (!File.Exists(classPath))
-        {
-            File.Create(classPath);
-        }
-        else
+        if (File.Exists(classPath))
         {
             File.Delete(classPath);
-            File.Create(classPath);
         }
-        writer = new StreamWriter(File.OpenWrite(classPath));
-        var map = GetGeneratorMap();
-        List<BaseGeneratorEditor[]> generatorMap = new List<BaseGeneratorEditor[]>();
-        GetGenerator(target, map, writer, ref generatorMap);
-        OnWrite(writer, target, generatorMap);
+        writer = new StreamWriter(File.Create(classPath));
+
+        try
+        {
+            var map = GetGeneratorMap();
+            List<BaseGeneratorEditor[]> generatorMap = new List<BaseGeneratorEditor[]>();
+            GetGenerator(target, map, writer, ref generatorMap);
+            OnWrite(writer, target, generatorMap);
+            writer.Flush();
+            Debug.Log("文件写入成功:" + classPath);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError(ex);
+        }
+        finally
+        {
+            writer.Close();
+
+        }
+
+
     }
     #region 写入
 
@@ -39,30 +52,24 @@ public class GeneratorUIWIndowEditor
         //写入基础using
         OnWriteUseing(writer, generatorMap);
         //写入额外需要using内容
+        writer.WriteLine();
         OnWriteClass(writer, target);
         //写入声明
         OnWriteField(generatorMap);
-        //写入Awark
-        OnWiretAwark(writer, generatorMap);
+        //写入Unity的时间调用事件
+        OnWriteUnityFunc(writer, generatorMap);
         //写入方法
         OnWriteMethod(generatorMap);
         writer.WriteLine("}");
     }
     private static void OnWriteUseing(StreamWriter write,List<BaseGeneratorEditor[]> map)
     {
-        write.WriteLine($"using UnityEngine");
-        write.WriteLine($"using UnityEngine.UI");
-        write.WriteLine($"using System");
-        write.WriteLine($"using System.Collections");
-        write.WriteLine($"using System.Collections.Generic");
-
-        for (int i = 0; i < map.Count; i++)
-        {
-            for (int j = 0; j < map[i].Length; i++)
-            {
-                map[i][j].WriteUsing();
-            }
-        }
+        write.WriteLine($"using UnityEngine;");
+        write.WriteLine($"using UnityEngine.UI;");
+        write.WriteLine($"using System;");
+        write.WriteLine($"using System.Collections;");
+        write.WriteLine($"using System.Collections.Generic;");
+        OnWriteNodeFunc(map, "WriteUsing");
     }
 
 
@@ -72,24 +79,12 @@ public class GeneratorUIWIndowEditor
     /// <param name="map"></param>
     private static void OnWriteField(List<BaseGeneratorEditor[]> map)
     {
-        for (int i = 0; i < map.Count; i++)
-        {
-            for (int j = 0; j < map[i].Length; i++)
-            {
-                map[i][j].WriteField("    ");
-            }
-        }
+        OnWriteNodeFunc(map, "WriteField", "    ");
     }
 
     private static void OnWriteMethod(List<BaseGeneratorEditor[]> map)
     {
-        for (int i = 0; i < map.Count; i++)
-        {
-            for (int j = 0; j < map[i].Length; i++)
-            {
-                map[i][j].WriteMethod("    ");
-            }
-        }
+        OnWriteNodeFunc(map, "WriteMethod", "    ");
     }
     private static void OnWriteClass(StreamWriter write,GameObject root)
     {
@@ -97,19 +92,45 @@ public class GeneratorUIWIndowEditor
         write.WriteLine(@"{");
     }
 
-    private static void OnWiretAwark(StreamWriter write,List<BaseGeneratorEditor[]> map)
+    private static void OnWriteUnityFunc(StreamWriter write, List<BaseGeneratorEditor[]> map)
+    {
+        OnWiretUnityEvent(write, map, "Awake");
+        OnWiretUnityEvent(write, map, "OnEnable");
+        OnWiretUnityEvent(write, map, "OnDisable");
+        OnWiretUnityEvent(write, map, "Start");
+        OnWiretUnityEvent(write, map, "OnDestroy");
+        OnWiretUnityEvent(write, map, "Update");
+    }
+
+    private static void OnWiretUnityEvent(StreamWriter write,List<BaseGeneratorEditor[]> map,string funcName)
     {
         var tab = "    ";
-        write.WriteLine($"{tab}public void Award()");
+        write.WriteLine($"{tab}public override void {funcName}()");
         write.WriteLine($"{tab}{{");
+        write.WriteLine($"{tab}{tab}base.{funcName}();");
+        OnWriteNodeFunc(map, $"Write{funcName}", tab + tab);
+        write.WriteLine($"{tab}}}");
+        write.WriteLine("\n");
+    }
+
+    private static void OnWriteNodeFunc(List<BaseGeneratorEditor[]> map,string funcName,string childTab ="")
+    {
         for (int i = 0; i < map.Count; i++)
         {
-            for (int j = 0; j < map[i].Length; i++)
+            for (int j = 0; j < map[i].Length; j++)
             {
-                map[i][j].WriteValuation(tab+tab);
+                try {
+                    var method = map[i][j].GetType().GetMethod(funcName, BindingFlags.Instance | BindingFlags.Public);
+                    method.Invoke(map[i][j], new object[] { childTab });
+                }
+                catch(Exception ex)
+                {
+                    Debug.LogError(funcName + "：错误");
+                    throw ex;
+                }
+              
             }
         }
-        write.WriteLine($"{tab}}}");
     }
     #endregion
     /// <summary>
@@ -131,14 +152,14 @@ public class GeneratorUIWIndowEditor
                 }
             }
             stackMap.Add(allGenerator);
-            var childCount = go.transform.childCount;
-            for(int i = 0; i < childCount; i++)
-            {
-                var child = go.transform.GetChild(i);
-                GetGenerator(child.gameObject, map, writer, ref stackMap);
-            }
+            
         }
-
+        var childCount = go.transform.childCount;
+        for (int i = 0; i < childCount; i++)
+        {
+            var child = go.transform.GetChild(i);
+            GetGenerator(child.gameObject, map, writer, ref stackMap);
+        }
     }
 
     private static Dictionary<EUINode, Type> GetGeneratorMap()

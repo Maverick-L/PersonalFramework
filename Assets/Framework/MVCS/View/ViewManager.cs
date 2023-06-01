@@ -217,13 +217,17 @@ namespace Framework.MVC
             {
                 view.GetComponent<Canvas>().sortingOrder = _orderLayer + (_showStack[EWindowType.Normal].Count + _showStack[EWindowType.Popup].Count) * _orderStep;
             }
+            //在动画播放完毕之前不允许点击事件
             GraphicRaycaster _renderer = view.GetComponent<GraphicRaycaster>();
             _renderer.enabled = false;
             viewConf.viewMediator.OnCreate(view, param);
             _showStack[viewConf.windowType].Push(view);
             StartCoroutine(CoPlayAnimatior(view, true, () =>
             {
-                _renderer.enabled = true;
+                if (_renderer)
+                {
+                    _renderer.enabled = true;
+                }
 
             }));
             

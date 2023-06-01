@@ -4,19 +4,12 @@ using UnityEngine;
 using System.IO;
 using UnityEngine.UI;
 
-[GeneratorWindowAttrubity(EUINode.UI_Text)]
+[GeneratorWindowAttrubity(EUINode.UI_Text,typeof(Text))]
 public class UI_TextCreateEditor :BaseGeneratorEditor
 {
-    private Text _text;
-    private string _fieldName;
-    public override void OnInit(GameObject go, StreamWriter write)
-    {
-        base.OnInit(go, write);
-        _fieldName = _myObj.name + "Text";
-    }
     public override bool Check()
     {
-        return TryGetContraller<Text>(out _text);
+        return TryGetContraller<Text>();
     }
 
     public override void WriteField(string tab)
@@ -25,16 +18,16 @@ public class UI_TextCreateEditor :BaseGeneratorEditor
 
     }
 
-    public override void WriteValuation(string tab)
+    public override void WriteAwake(string tab)
     {
-        _write.WriteLine($"{tab}{_fieldName} = transform.Find({_findPath}).GetComponent<Text>();");
+        _write.WriteLine($"{tab}{_fieldName} = transform.Find(\"{_findPath}\").GetComponent<Text>();");
     }
     public override void WriteMethod(string tab)
     {
-        _write.WriteLine($"{tab}public void Set{_fieldName}Text(string value)");
+        _write.WriteLine($"{tab}public void Set{_fieldFuncName}(string value)");
         _write.WriteLine($"{tab}{{");
         _write.WriteLine($"{tab}{_tab}{ _fieldName}.text = value;");
         _write.WriteLine($"{tab}}}");
-
+        MoveToNext();
     }
 }

@@ -54,9 +54,27 @@ namespace Framework.MVC
         [MenuItem("Assets/MVC/Generator Window")]
         private static void GeneratorWindow()
         {
-
+            RealGeneratWindow();
         }
 
+        [MenuItem("GameObject/MVC/Generator Window",priority =0)]
+        private static void GeneratorWithHierarchy()
+        {
+            RealGeneratWindow();
+        }
+
+        private static void RealGeneratWindow()
+        {
+            var objs = Selection.gameObjects;
+            for(int i = 0; i < objs.Length; i++)
+            {
+                GeneratorUIWIndowEditor.OnStartCreate(objs[i]);
+                AssetDatabase.Refresh();
+                objs[i].AddComponent(Assembly.GetAssembly(typeof(BaseViewWindow)).GetType(objs[i].name));
+                EditorUtility.SetDirty(objs[i]);
+            }
+            AssetDatabase.Refresh();
+        }
 
         private static FileStream GetFilePath(EGenerator gType,string fileName = "")
         {

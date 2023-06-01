@@ -22,10 +22,41 @@ namespace Framework.MVC
     public class BaseViewWindow : MonoBehaviour
     {
         [SerializeField]
-        private WindowConfig _viewConfig;
+        protected WindowConfig _viewConfig;
         public WindowConfig viewConfig => _viewConfig;
 
         public BaseViewMediator setMediator { set { _viewConfig.viewMediator = value; } }
         public int setViewID { set { _viewConfig.viewID = value; } }
+        #region Unity
+        public virtual void Awake()
+        {
+
+        }
+
+        public virtual void Start()
+        {
+
+        }
+
+        public virtual void OnEnable()
+        {
+
+        }
+
+        public virtual void OnDisable()
+        {
+
+        }
+
+        public virtual void OnDestroy()
+        {
+
+        }
+
+        public virtual void Update()
+        {
+
+        }
+        #endregion
     }
 }
