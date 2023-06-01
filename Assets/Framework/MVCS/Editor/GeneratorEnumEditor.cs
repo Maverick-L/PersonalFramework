@@ -10,8 +10,6 @@ namespace Framework.MVC
 
     public enum EGenerator
     {
-        EModel,//不再使用
-        EContraller,//不在使用
         EWindow,
         Window
     }
@@ -26,23 +24,9 @@ namespace Framework.MVC
         [MenuItem("Framework/MVC/Generator All")]
         private static void GeneratorAll()
         {
-            GeneratorModel();
-            GeneratorContraller();
             GeneratorEWindow();
         }
 
-        [MenuItem("Framework/MVC/Generator Model")]
-        private static void GeneratorModel()
-        {
-            //Generator(EGenerator.EModel);
-        }
-
-        [MenuItem("Framework/MVC/Generator Contraller")]
-        private static void GeneratorContraller()
-        {
-            //Generator(EGenerator.EContraller);
-
-        }
 
         [MenuItem("Framework/MVC/Generator View EWindow ")]
         private static void GeneratorEWindow()
@@ -61,6 +45,7 @@ namespace Framework.MVC
         private static void GeneratorWithHierarchy()
         {
             RealGeneratWindow();
+            GeneratorEWindow();
         }
 
         private static void RealGeneratWindow()
@@ -81,14 +66,8 @@ namespace Framework.MVC
             string path="";
             switch (gType)
             {
-                case EGenerator.EContraller:
-                    path = Path.Combine(GENERATOR_ROOT_PATH, "Contraller/EContraller.cs"); break;
-                case EGenerator.EModel:
-                    path = Path.Combine(GENERATOR_ROOT_PATH, "Model/EModel.cs");break;
                 case EGenerator.EWindow:
                     path = Path.Combine(GENERATOR_ROOT_PATH, "View/EWindow.cs");break;
-                case EGenerator.Window:
-                    path = Path.Combine(GENERATOR_ROOT_PATH, "View/Window/" + fileName + ".cs");break;
             }
             if (File.Exists(path))
             {
@@ -107,14 +86,8 @@ namespace Framework.MVC
 
             switch (gType)
             {
-                case EGenerator.EContraller:
-                    WriteEnumData(write, "Framework.MVC.BaseContraller");break;
-                case EGenerator.EModel:
-                    WriteEnumData(write, "Framework.MVC.BaseModel");break;
                 case EGenerator.EWindow:
                     WriteEnumData(write, "Framework.MVC.BaseViewWindow");break;
-                case EGenerator.Window:
-                    WriteWindow(write, fileName);break;
             }
 
             write.WriteLine("}");
@@ -138,20 +111,10 @@ namespace Framework.MVC
 
             switch (gtype)
             {
-                case EGenerator.EContraller:
-                    writer.WriteLine("public enum EContraller"); break;
-                case EGenerator.EModel:
-                    writer.WriteLine("public enum EModel"); break;
                 case EGenerator.EWindow:
                     writer.WriteLine("public enum EWindow"); break;
-                case EGenerator.Window:
-                    writer.WriteLine("public class " + fileName + " :Framwork.MVC.BaseView"); break;
             }
             writer.WriteLine("{");
-            if(gtype == EGenerator.EWindow || gtype == EGenerator.EContraller)
-            {
-                writer.WriteLine("    None,");
-            }
 
         }
         /// <summary>
@@ -183,16 +146,6 @@ namespace Framework.MVC
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// 写入自动化窗口页面
-        /// </summary>
-        /// <param name="write"></param>
-        /// <param name="fileName"></param>
-        private static void WriteWindow(StreamWriter write,string fileName)
-        {
-
         }
 
         #endregion
