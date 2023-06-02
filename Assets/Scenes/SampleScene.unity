@@ -1003,42 +1003,6 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 1
   m_TargetDisplay: 0
---- !u!114 &2743563766671990724
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7150991501959088535}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 58394c8dba575554e9a2771d4219fb3d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  sendText: {fileID: 0}
-  ReciveText: {fileID: 0}
-  clickSend: {fileID: 0}
-  sendInput: {fileID: 0}
-  sendCount: {fileID: 0}
-  clickLink: {fileID: 0}
-  linkAddress: {fileID: 0}
-  linkPort: {fileID: 0}
-  nodely: {fileID: 0}
-  blocking: {fileID: 0}
-  testHalfPackage: {fileID: 0}
-  testStickyBag: {fileID: 0}
---- !u!114 &2873309098532690245
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7150991501959088535}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ad8ffd7c30e5a63448070c5ac6e92861, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!222 &3101667587537986251
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1198,8 +1162,7 @@ GameObject:
   - component: {fileID: 7150991501959088539}
   - component: {fileID: 7150991501959088538}
   - component: {fileID: 7150991501959088533}
-  - component: {fileID: 2743563766671990724}
-  - component: {fileID: 2873309098532690245}
+  - component: {fileID: 7150991501959088536}
   m_Layer: 5
   m_Name: MVCExample_View1
   m_TagString: Untagged
@@ -1207,6 +1170,33 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &7150991501959088536
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7150991501959088535}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e7d83fefc9ad1d4499ed2560db65963, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _viewConfig:
+    window: 0
+    parentWindow: 0
+    windowType: 0
+    viewMediatorName: 
+    fixedOrderLayer: 0
+    cache: 0
+    viewID: 0
+    openAnimation: {fileID: 0}
+    loopAnimation: {fileID: 0}
+    closeAnimation: {fileID: 0}
+  titleText: {fileID: 0}
+  closeButtonButton: {fileID: 0}
+  openView2Button: {fileID: 0}
+  openView3Button: {fileID: 0}
 --- !u!114 &7150991501959088538
 MonoBehaviour:
   m_ObjectHideFlags: 0
