@@ -89,7 +89,7 @@ namespace Framework.MVC
         /// <param name="window"></param>
         public void OnClose(BaseViewWindow window)
         {
-            StartCoroutine(CoCloseWindow(window.viewConfig.windowType, window.viewConfig.viewID));
+            StartCoroutine(CoCloseWindow(window.viewConfig.windowType, window.viewID));
         }
 
         /// <summary>
@@ -207,7 +207,7 @@ namespace Framework.MVC
                 }
             }
 
-            view.setMediator = Activator.CreateInstance(Type.GetType(viewConf.viewMediatorName)) as BaseViewMediator;
+            view.mediator = Activator.CreateInstance(Type.GetType(viewConf.viewMediatorName)) as BaseViewMediator;
             view.gameObject.SetActive(true);
             if(viewConf.windowType == EWindowType.Fixed)
             {
@@ -220,7 +220,7 @@ namespace Framework.MVC
             //在动画播放完毕之前不允许点击事件
             GraphicRaycaster _renderer = view.GetComponent<GraphicRaycaster>();
             _renderer.enabled = false;
-            viewConf.viewMediator.OnCreate(view, param);
+            view.mediator.OnCreate(view, param);
             _showStack[viewConf.windowType].Push(view);
             StartCoroutine(CoPlayAnimatior(view, true, () =>
             {
@@ -279,7 +279,7 @@ namespace Framework.MVC
                 while(showWindow.Count > 0)
                 {
                     var view = showWindow.Pop();
-                    if(view.viewConfig.viewID == removeID)
+                    if(view.viewID == removeID)
                     {
                         allClose.Enqueue(view);
                         break;
@@ -313,9 +313,9 @@ namespace Framework.MVC
             while (allClose.Count > 0)
             {
                 var view = allClose.Dequeue();
-                view.viewConfig.viewMediator.OnDestory();
-                view.setMediator = null;
-                ReleaseViewID(view.viewConfig.viewID);
+                view.mediator.OnDestory();
+                view.mediator = null;
+                ReleaseViewID(view.viewID);
                 yield return CoPlayAnimatior(view, false);
                 CacheWindow(view);
             }

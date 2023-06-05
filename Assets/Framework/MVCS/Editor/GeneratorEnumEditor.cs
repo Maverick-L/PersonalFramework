@@ -69,31 +69,66 @@ namespace Framework.MVC
                 case EGenerator.EWindow:
                     path = Path.Combine(GENERATOR_ROOT_PATH, "View/EWindow.cs");break;
             }
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-            }
-            
-            return File.Create(path);
+
+            return File.Open(path, FileMode.OpenOrCreate);
         }
         #region 写入
 
         private static void Generator(EGenerator gType,string fileName="")
         {
             FileStream stream = GetFilePath(gType, fileName);
-            StreamWriter write = new StreamWriter(stream);
-            WriteHead(write,gType,fileName);
-
-            switch (gType)
+            try
             {
-                case EGenerator.EWindow:
-                    WriteEnumData(write, "Framework.MVC.BaseViewWindow");break;
+                HashSet<string> haveMap = new HashSet<string>();
+                //移动到结束的位置
+                if (stream.CanSeek)
+                {
+                    stream.Seek(-2, SeekOrigin.End);
+                    long moveCount;
+                    while (stream.ReadByte() != '}')
+                    {
+                        stream.Seek(-2, SeekOrigin.Current);
+                    }
+                    moveCount = stream.Length - stream.Position;
+                    //记录所有的已经写入的类名
+                    StreamWriter headWriter = new StreamWriter(new MemoryStream());
+                    WriteHead(headWriter, gType);
+                    stream.Seek(headWriter.BaseStream.Length, SeekOrigin.Begin);
+                    StreamReader read = new StreamReader(stream);
+                    headWriter.Close();
+                    string removeVal;
+                    do
+                    {
+                        removeVal = read.ReadLine().Replace(" ", "").Replace(",", "");
+                        haveMap.Add(removeVal);
+                        Debug.LogError(removeVal);
+                    } while (removeVal != "}");
+                    read.Dispose();
+                    stream.Seek(moveCount, SeekOrigin.End);
+                }
+                StreamWriter write = new StreamWriter(stream);
+                if (stream.Position == 0)
+                {
+                    WriteHead(write, gType, fileName);
+                }
+                switch (gType)
+                {
+                    case EGenerator.EWindow:
+                        WriteEnumData(write, "Framework.MVC.BaseViewWindow"); break;
+                }
+                write.Write("}");
+                write.Flush();
+                write.Dispose();
             }
+            catch(Exception ex)
+            {
+                Debug.LogError(ex.Message);
+            }
+            finally{
 
-            write.WriteLine("}");
-            write.Flush();
-            write.Close();
-            AssetDatabase.Refresh();
+                stream.Close();
+                AssetDatabase.Refresh();
+            }
         }
 
         /// <summary>
@@ -112,10 +147,11 @@ namespace Framework.MVC
             switch (gtype)
             {
                 case EGenerator.EWindow:
-                    writer.WriteLine("public enum EWindow"); break;
+                    writer.WriteLine("public enum EWindow");
+                    break;
             }
             writer.WriteLine("{");
-
+            writer.WriteLine("    None,");
         }
         /// <summary>
         /// 写入enum数据,依据反射获取所以继承baseName的文件，将文件名写入enum
@@ -129,10 +165,12 @@ namespace Framework.MVC
             Assembly assembly = Assembly.GetAssembly(typeof(MVCLaunch));
             var allTypes = assembly.GetTypes();
             System.Type baseType = assembly.GetType(baseName);
+            List<Type> enumMap = new List<Type>();
             foreach(var mtype in allTypes)
             {
                 if(mtype.IsClass && mtype.BaseType == baseType && mtype != baseType)
                 {
+                    enumMap.Add(mtype);
                     if (writeSet.Add(mtype.Name))
                     {
                         GeneratorAttrubity att = mtype.GetCustomAttribute(typeof(GeneratorAttrubity)) as GeneratorAttrubity;

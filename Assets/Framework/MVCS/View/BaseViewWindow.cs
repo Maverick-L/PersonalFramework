@@ -4,29 +4,26 @@ using UnityEngine;
 
 namespace Framework.MVC
 {
-    [System.Serializable]
-    public struct WindowConfig
-    {
-        public EWindow window;
-        public EWindow parentWindow;
-        public EWindowType windowType;
-        public string viewMediatorName;
-        public int fixedOrderLayer;
-        public bool cache;
-        public int viewID;
-        public AnimationClip openAnimation;
-        public AnimationClip loopAnimation;
-        public AnimationClip closeAnimation;
-        public BaseViewMediator viewMediator;
-    }
+    [RequireComponent(typeof(WindowConfigMono))]
     public class BaseViewWindow : MonoBehaviour
     {
-        [SerializeField]
-        protected WindowConfig _viewConfig;
-        public WindowConfig viewConfig => _viewConfig;
+        protected int _viewID;
+        protected WindowConfigMono _windowConf;
+        public int setViewID { set { _viewID = value; } }
+        public BaseViewMediator mediator { get; internal set; }
 
-        public BaseViewMediator setMediator { set { _viewConfig.viewMediator = value; } }
-        public int setViewID { set { _viewConfig.viewID = value; } }
+        public WindowConfig viewConfig
+        {
+            get
+            {
+                if(_windowConf == null)
+                {
+                    _windowConf = gameObject.GetComponent<WindowConfigMono>();
+                }
+                return _windowConf.viewConfig;
+            } 
+        }
+        public int viewID => _viewID;
         #region Unity
         public virtual void Awake()
         {

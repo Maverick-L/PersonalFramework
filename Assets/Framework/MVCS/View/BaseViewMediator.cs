@@ -9,7 +9,7 @@ namespace Framework.MVC
     }
     public abstract class BaseViewMediator : IMessage
     {
-        protected BaseViewWindow _window;
+        private BaseViewWindow _window;
         private BaseWindowParams _params;
         /// <summary>
         /// 获取页面参数
@@ -31,7 +31,7 @@ namespace Framework.MVC
         /// </summary>
         /// <typeparam name="TWindow"></typeparam>
         /// <returns></returns>
-        protected TWindow Get<TWindow>() where TWindow : BaseViewWindow
+        protected TWindow Window<TWindow>() where TWindow : BaseViewWindow
         {
             return _window as TWindow;
         }
