@@ -83,28 +83,29 @@ namespace Framework.MVC
                 //移动到结束的位置
                 if (stream.CanSeek)
                 {
-                    stream.Seek(-2, SeekOrigin.End);
+                    stream.Seek(-1, SeekOrigin.End);
                     long moveCount;
                     while (stream.ReadByte() != '}')
                     {
                         stream.Seek(-2, SeekOrigin.Current);
                     }
-                    moveCount = stream.Length - stream.Position;
+                    moveCount = stream.Length - 1;
                     //记录所有的已经写入的类名
+                    //写入头文件长度
                     StreamWriter headWriter = new StreamWriter(new MemoryStream());
                     WriteHead(headWriter, gType);
+                    headWriter.Flush();
+                    //移动到头文件结束的位置
                     stream.Seek(headWriter.BaseStream.Length, SeekOrigin.Begin);
                     StreamReader read = new StreamReader(stream);
                     headWriter.Close();
                     string removeVal;
-                    do
+                    while(read.Peek() !='}')
                     {
                         removeVal = read.ReadLine().Replace(" ", "").Replace(",", "");
                         haveMap.Add(removeVal);
-                        Debug.LogError(removeVal);
-                    } while (removeVal != "}");
-                    read.Dispose();
-                    stream.Seek(moveCount, SeekOrigin.End);
+                    } 
+                    stream.Seek(moveCount, SeekOrigin.Begin);
                 }
                 StreamWriter write = new StreamWriter(stream);
                 if (stream.Position == 0)
@@ -114,7 +115,9 @@ namespace Framework.MVC
                 switch (gType)
                 {
                     case EGenerator.EWindow:
-                        WriteEnumData(write, "Framework.MVC.BaseViewWindow"); break;
+                        WriteEnumData(write, "Framework.MVC.BaseViewWindow", haveMap);
+                        WriteEnumDataWithPrefab(write, haveMap);
+                        break;
                 }
                 write.Write("}");
                 write.Flush();
@@ -122,7 +125,7 @@ namespace Framework.MVC
             }
             catch(Exception ex)
             {
-                Debug.LogError(ex.Message);
+                Debug.LogError(ex);
             }
             finally{
 
@@ -158,9 +161,8 @@ namespace Framework.MVC
         /// </summary>
         /// <param name="writer">写入流</param>
         /// <param baseName="writer">继承的父类的名字</param>
-        private static void WriteEnumData(StreamWriter writer,string baseName)
+        private static void WriteEnumData(StreamWriter writer,string baseName,HashSet<string> writeSet)
         {
-            HashSet<string> writeSet = new HashSet<string>();
 
             Assembly assembly = Assembly.GetAssembly(typeof(MVCLaunch));
             var allTypes = assembly.GetTypes();
@@ -182,6 +184,24 @@ namespace Framework.MVC
 
                         writer.WriteLine("    " + mtype.Name+",");
                     }
+                }
+            }
+        }
+        /// <summary>
+        /// 写入enum数据，依据所有的View预制件获取
+        /// </summary>
+        /// <param name="writer"></param>
+        /// <param name="writeSet"></param>
+        private static void WriteEnumDataWithPrefab(StreamWriter writer,HashSet<string> writeSet)
+        {
+            var path = System.IO.Path.Combine(Application.dataPath, MVCUtil.PREFAB_PATH);
+            var allPrefab = Directory.GetFiles(path, "*.prefab", SearchOption.AllDirectories);
+            for(int i = 0; i < allPrefab.Length; i++)
+            {
+                var name = Path.GetFileNameWithoutExtension(allPrefab[i]);
+                if (writeSet.Add(name))
+                {
+                    writer.WriteLine("    " + name + ",");
                 }
             }
         }

@@ -19,12 +19,12 @@ namespace Framework.MVC
         /// </summary>
         protected static void ModifyModelData<TModel>(TModel model) where TModel :IBaseModelStruct
         {
-            MVCLaunch.instance.model.Set<TModel>(model);
+            ModelManager.instance.Set<TModel>(model);
         }
 
         protected static TModel GetModelData<TModel>() where TModel : IBaseModelStruct
         {
-            return MVCLaunch.instance.model.Get<TModel>();
+            return ModelManager.instance.Get<TModel>();
         }
 
         public abstract void OnInitlization();

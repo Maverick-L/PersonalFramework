@@ -18,13 +18,9 @@ namespace Framework.MVC
     }
     public class ViewManager :MonoBehaviour
     {
+        public static ViewManager instance;
         //ui Camera
         private Camera _uiCamera;
-        // 返回上一级处理
-        // 缓存个数
-        // 弹窗多开
-        // 父子界面
-        //携带参数
         //缓存
         private readonly int cacheMax = 5;
         private Dictionary<EWindow, BaseViewWindow> _cacheMap = new Dictionary<EWindow, BaseViewWindow>();
@@ -242,7 +238,7 @@ namespace Framework.MVC
         private IEnumerator CoLoadWindow(EWindow window, BaseViewWindow view)
         {
             //加载界面资源
-            string path = "Assets/data/prefab/" + window.ToString()+".prefab";
+            string path = "Assets/" + MVCUtil.PREFAB_PATH + "/" + window.ToString() + ".prefab";
 #if UNITY_EDITOR
            GameObject  go = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(path);
 #endif

@@ -72,7 +72,7 @@ namespace Framework.MVC
                 {
                     _mediator.stringValue = Path.GetFileNameWithoutExtension(mediator);
                     Type t = Assembly.GetAssembly(typeof(Framework.MVC.BaseViewWindow)).GetType(_mediator.stringValue);
-                    if (t.BaseType != typeof(Framework.MVC.BaseViewWindow))
+                    if (t.BaseType != typeof(Framework.MVC.BaseViewMediator))
                     {
                         _mediator.stringValue = "";
                         EditorUtility.DisplayDialog("文件选择错误", $"{mediator}文件不是对应的中介器","确定");

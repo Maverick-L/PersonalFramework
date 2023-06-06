@@ -5,27 +5,36 @@ namespace Framework.MVC
 {
     public class MVCLaunch
     {
-        public static MVCLaunch instance = new MVCLaunch();
-
-        private ModelManager _model;
-        internal ModelManager model => _model;
-
         
-        public void OnInit()
+        public void OnInit(UnityEngine.Camera camera)
         {
-            _model = new ModelManager();
-            _model.OnInitModel();
+            ModelManager.instance.OnInitModel();
+            ViewManager.instance = camera.gameObject.GetComponent<ViewManager>();
+            ViewManager.instance.OnInitlization(camera);
+            ViewManager.instance.OnShow(EWindow.MVCExample_View1);
+            
         }
-
+        public void OnDestroy()
+        {
+            ModelManager.instance.OnDestoryModel();
+        }
         
     }
 
     public class MVCLaunchMono : UnityEngine.MonoBehaviour
     {
+        public UnityEngine.Camera camera;
+        public MVCLaunch launch;
         private void Awake()
         {
-            MVCLaunch.instance = new MVCLaunch();
-            MVCLaunch.instance.OnInit();
+            launch = new MVCLaunch();
+            launch.OnInit(camera);
+            DontDestroyOnLoad(this);
+        }
+        
+        private void OnDestroy()
+        {
+            launch.OnDestroy();
         }
     }
 }
