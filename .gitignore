@@ -11,4 +11,7 @@
 /.vs
 /.csproj
 *.csproj
+*/Library
+*/.idea
+*/.vscode
 
