@@ -41,6 +41,10 @@ namespace Framework.MVC
         /// 展示面板排队使用的协程
         /// </summary>
         private Coroutine _showCoroutine;
+        /// <summary>
+        /// 加载完成的列表实例
+        /// </summary>
+        private Dictionary<EWindow, GameObject> _windowObj = new Dictionary<EWindow, GameObject>();
 
         //显示层级
         private int _orderLayer = 1000;
@@ -58,11 +62,11 @@ namespace Framework.MVC
             _uiCamera = uiCamera;
             _uiCamera.transform.position = new Vector3(9999, 9999, 9999);
             _uiCamera.clearFlags = CameraClearFlags.Depth;
-            _uiCamera.cullingMask = LayerMask.NameToLayer("UI");
-            _uiCamera.orthographicSize = 0;
+            _uiCamera.cullingMask = 1 << LayerMask.NameToLayer("UI");
             _uiCamera.allowHDR = false;
             _uiCamera.allowMSAA = false;
             _orderStep = 20;
+            _uiCamera.depth = -1;
         }
 
         public void OnShow(EWindow window, BaseWindowParams param = null)
@@ -161,7 +165,8 @@ namespace Framework.MVC
                 }
                 else
                 {
-                    yield return CoLoadWindow(window, view);
+                    yield return CoLoadWindow(window);
+                    view = _windowObj[window].GetComponent<BaseViewWindow>();
                     if (view != null)
                     {
                         yield return CoRealShowWindow(view, param);
@@ -235,8 +240,9 @@ namespace Framework.MVC
         /// <param name="window"></param>
         /// <param name="param"></param>
         /// <returns></returns>
-        private IEnumerator CoLoadWindow(EWindow window, BaseViewWindow view)
+        private IEnumerator CoLoadWindow(EWindow window)
         {
+            
             //加载界面资源
             string path = "Assets/" + MVCUtil.PREFAB_PATH + "/" + window.ToString() + ".prefab";
 #if UNITY_EDITOR
@@ -248,13 +254,14 @@ namespace Framework.MVC
             }
             //加载完成
             go = GameObject.Instantiate<GameObject>(go);
-            view = go.GetComponent<BaseViewWindow>();
             go.gameObject.SetActive(false);
             Canvas canvas = go.GetComponent<Canvas>();
             canvas.worldCamera = _uiCamera;
             canvas.renderMode = RenderMode.ScreenSpaceCamera;
             go.layer = LayerMask.NameToLayer("UI");
+            go.name = window.ToString();
             GameObject.DontDestroyOnLoad(go);
+            _windowObj.Add(window, go);
             yield return null;
         }
 
