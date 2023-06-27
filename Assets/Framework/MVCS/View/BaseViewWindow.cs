@@ -7,9 +7,8 @@ namespace Framework.MVC
     [RequireComponent(typeof(WindowConfigMono))]
     public class BaseViewWindow : MonoBehaviour
     {
-        protected int _viewID;
         protected WindowConfigMono _windowConf;
-        public int setViewID { set { _viewID = value; } }
+        public int viewID { internal set; get; }
         public BaseViewMediator mediator { get; internal set; }
 
         public WindowConfig viewConfig
@@ -23,7 +22,6 @@ namespace Framework.MVC
                 return _windowConf.viewConfig;
             } 
         }
-        public int viewID => _viewID;
         #region Unity
         public virtual void Awake()
         {

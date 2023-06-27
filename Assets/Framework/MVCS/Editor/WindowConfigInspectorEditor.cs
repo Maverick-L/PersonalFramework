@@ -40,7 +40,7 @@ namespace Framework.MVC
 
             if (_windowType.enumValueIndex == -1)
             {
-                _windowType.enumValueIndex = (int)EWindowType.Normal;
+                _windowType.enumValueIndex =0;
             }
             if (_window.enumValueIndex == -1)
             {
@@ -57,11 +57,9 @@ namespace Framework.MVC
         public override void OnInspectorGUI()
         {
             
-            WindowConfigMono view = (WindowConfigMono)target;
-            _window.enumValueIndex = (int)(EWindow)EditorGUILayout.EnumPopup("Window", (EWindow)_window.enumValueIndex);
+            _window.enumValueIndex = (int)(EWindow)EditorGUILayout.EnumPopup("Window", (EWindow)_window.enumValueIndex );
             _parentWindow.enumValueIndex = (int)(EWindow)EditorGUILayout.EnumPopup("Parent Window", (EWindow)_parentWindow.enumValueIndex);
-
-            _windowType.enumValueIndex = (int)(EWindowType)EditorGUILayout.EnumPopup("Window Type", _windowType.enumValueIndex <= 0 ? EWindowType.Normal : (EWindowType)_windowType.enumValueIndex);
+            _windowType.enumValueIndex = (int)(EWindowType)EditorGUILayout.EnumPopup("Window Type", (EWindowType)_windowType.enumValueIndex);
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("mediator", _mediator.stringValue);
             if (GUILayout.Button("select"))

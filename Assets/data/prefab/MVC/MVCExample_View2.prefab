@@ -527,7 +527,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -2.899292, y: -0.43945312}
-  m_SizeDelta: {x: 1281, y: 720}
+  m_SizeDelta: {x: 1280, y: 720}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2340939735797895849
 CanvasRenderer:
@@ -679,7 +679,7 @@ MonoBehaviour:
   _viewConfig:
     window: 1
     parentWindow: 0
-    windowType: 2
+    windowType: 0
     viewMediatorName: MediatorExampleView1
     fixedOrderLayer: 0
     cache: 0

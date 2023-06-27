@@ -679,7 +679,7 @@ MonoBehaviour:
   _viewConfig:
     window: 3
     parentWindow: 0
-    windowType: 2
+    windowType: 0
     viewMediatorName: MediatorExampleView1
     fixedOrderLayer: 0
     cache: 0

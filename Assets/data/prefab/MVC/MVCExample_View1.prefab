@@ -679,10 +679,10 @@ MonoBehaviour:
   _viewConfig:
     window: 2
     parentWindow: 0
-    windowType: 2
+    windowType: 0
     viewMediatorName: MediatorExampleView1
     fixedOrderLayer: 0
-    cache: 0
+    cache: 1
     openAnimation: {fileID: 0}
     loopAnimation: {fileID: 0}
     closeAnimation: {fileID: 0}
