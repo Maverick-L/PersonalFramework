@@ -8,6 +8,7 @@
 2. Hybrid Renderer(0.51.1-preview.21)
 3. HybridCLR(3.3.0)
 4. protobuffer(3.18.0)
+5. LitJson
 
 ## 完成框架
 1. MVC
