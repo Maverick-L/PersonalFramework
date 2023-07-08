@@ -71,7 +71,7 @@ public class Launcher : MonoBehaviour
        //Debug.LogError(MVCLaunch.instance.model.Get<MVCModelExample_Model2>().ToString());
        //Debug.LogError(MVCLaunch.instance.model.Get<MVCMoelExample_Model>().ToString());
 
-        DontDestroyOnLoad(uiCamera);
+        //DontDestroyOnLoad(uiCamera);
         DontDestroyOnLoad(this);
     }
 

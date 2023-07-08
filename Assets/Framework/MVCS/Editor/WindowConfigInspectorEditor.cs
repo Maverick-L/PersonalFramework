@@ -6,50 +6,90 @@ using System.Reflection;
 using System;
 using UnityEngine;
 using System.IO;
-
+using UnityEditor;
 namespace Framework.MVC
 {
-    [CustomEditor(typeof(BaseViewWindow))]
+
+    [CustomEditor(typeof(WindowConfigMono))]
     public class WindowConfigInspectorEditor : Editor
     {
+        SerializedProperty property;
+
+        SerializedProperty _fixedOrderLayer;
+        SerializedProperty _cache;
+        SerializedProperty _openAnimation;
+        SerializedProperty _loopAnimation;
+        SerializedProperty _closeAnimation;
+        SerializedProperty _window;
+        SerializedProperty _parentWindow;
+        SerializedProperty _windowType;
+        SerializedProperty _mediator;
+
+        private void OnEnable()
+        {
+            property = serializedObject.FindProperty("_viewConfig");
+            _fixedOrderLayer = property.FindPropertyRelative("fixedOrderLayer");
+            _cache = property.FindPropertyRelative("cache");
+            _openAnimation = property.FindPropertyRelative("openAnimation");
+            _loopAnimation = property.FindPropertyRelative("loopAnimation");
+            _closeAnimation = property.FindPropertyRelative("closeAnimation");
+            _window = property.FindPropertyRelative("window");
+            _parentWindow = property.FindPropertyRelative("parentWindow");
+            _windowType = property.FindPropertyRelative("windowType");
+            _mediator = property.FindPropertyRelative("viewMediatorName");
+
+            if (_windowType.enumValueIndex == -1)
+            {
+                _windowType.enumValueIndex =0;
+            }
+            if (_window.enumValueIndex == -1)
+            {
+                _window.enumValueIndex = 0;
+            }
+            if (_parentWindow.enumValueIndex == -1)
+            {
+                _parentWindow.enumValueIndex = 0;
+            }
+        }
+
+        
 
         public override void OnInspectorGUI()
-
         {
-            BaseViewWindow view = (BaseViewWindow)target;
-            FieldInfo field = view.GetType().GetField("_viewConfig", BindingFlags.Instance | BindingFlags.NonPublic);
-            WindowConfig config = (WindowConfig)field.GetValue(view);
-
-            config.window = (EWindow)EditorGUILayout.EnumPopup("Window",config.window);
-            config.parentWindow = (EWindow)EditorGUILayout.EnumPopup("Parent Window", config.parentWindow);
             
-            config.windowType = (EWindowType)EditorGUILayout.EnumPopup("WindowType", config.windowType);
-
+            _window.enumValueIndex = (int)(EWindow)EditorGUILayout.EnumPopup("Window", (EWindow)_window.enumValueIndex );
+            _parentWindow.enumValueIndex = (int)(EWindow)EditorGUILayout.EnumPopup("Parent Window", (EWindow)_parentWindow.enumValueIndex);
+            _windowType.enumValueIndex = (int)(EWindowType)EditorGUILayout.EnumPopup("Window Type", (EWindowType)_windowType.enumValueIndex);
             EditorGUILayout.BeginHorizontal();
-            config.viewMediatorName = EditorGUILayout.TextField("mediator", config.viewMediatorName);
+            EditorGUILayout.LabelField("mediator", _mediator.stringValue);
             if (GUILayout.Button("select"))
             {
                 string path = PlayerPrefs.GetString("WindowConfigInspectorEditorFile", Application.dataPath);
                 string mediator = EditorUtility.OpenFilePanel("select mediator", path, "cs");
                 if (!string.IsNullOrEmpty(mediator))
                 {
-                    config.viewMediatorName =Path.GetFileNameWithoutExtension(mediator);
+                    _mediator.stringValue = Path.GetFileNameWithoutExtension(mediator);
+                    Type t = Assembly.GetAssembly(typeof(Framework.MVC.BaseViewWindow)).GetType(_mediator.stringValue);
+                    if (t.BaseType != typeof(Framework.MVC.BaseViewMediator))
+                    {
+                        _mediator.stringValue = "";
+                        EditorUtility.DisplayDialog("文件选择错误", $"{mediator}文件不是对应的中介器","确定");
+                    }
                     PlayerPrefs.SetString("WindowConfigInspectorEditorFile", Path.GetDirectoryName(mediator));
                 }
             }
             EditorGUILayout.EndHorizontal();
-            if(config.windowType == EWindowType.Fixed)
+            if(_windowType.enumValueIndex == (int)EWindowType.Fixed)
             {
-                config.fixedOrderLayer = EditorGUILayout.IntField("fixedOrderLayer",config.fixedOrderLayer);
+                _fixedOrderLayer.intValue = EditorGUILayout.IntField("fixedOrderLayer", _fixedOrderLayer.intValue);
             }
 
-            config.cache = EditorGUILayout.Toggle("cache", config.cache);
+            _cache.boolValue = EditorGUILayout.Toggle("cache", _cache.boolValue);
+            _openAnimation.objectReferenceValue = EditorGUILayout.ObjectField("open Ani",_openAnimation.objectReferenceValue, typeof(AnimationClip),false) as AnimationClip;
+            _loopAnimation.objectReferenceValue = EditorGUILayout.ObjectField("loop Ani", _loopAnimation.objectReferenceValue, typeof(AnimationClip),false) as AnimationClip;
+            _closeAnimation.objectReferenceValue = EditorGUILayout.ObjectField("close Ani", _closeAnimation.objectReferenceValue, typeof(AnimationClip), false) as AnimationClip;
 
-            config.openAnimation = EditorGUILayout.ObjectField("open Ani", config.openAnimation, typeof(AnimationClip),false) as AnimationClip;
-            config.loopAnimation = EditorGUILayout.ObjectField("loop Ani", config.openAnimation, typeof(AnimationClip),false) as AnimationClip;
-            config.closeAnimation = EditorGUILayout.ObjectField("close Ani", config.openAnimation, typeof(AnimationClip), false) as AnimationClip;
-
-            field.SetValue(view, config);
+            serializedObject.ApplyModifiedProperties();
         }
     }
 }

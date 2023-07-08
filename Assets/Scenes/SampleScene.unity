@@ -132,6 +132,7 @@ GameObject:
   - component: {fileID: 152087077}
   - component: {fileID: 152087076}
   - component: {fileID: 152087075}
+  - component: {fileID: 152087078}
   m_Layer: 5
   m_Name: uiCamera
   m_TagString: Untagged
@@ -148,17 +149,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 152087074}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 19fa249f97e06854ebf7946c1e982a89, type: 3}
+  m_Script: {fileID: 11500000, guid: d90cadd054f585b44896b97e8412e996, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _viewConfig:
-    windowType: 0
-    viewMediatorName: 
-    fixedOrderLayer: 0
-    cache: 0
-    openAnimation: 
-    loopAnimation: 
-    closeAnimation: 
+  camera: {fileID: 152087076}
 --- !u!20 &152087076
 Camera:
   m_ObjectHideFlags: 0
@@ -187,7 +181,7 @@ Camera:
   field of view: 60
   orthographic: 1
   orthographic size: 5
-  m_Depth: 0
+  m_Depth: -100
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 32
@@ -222,6 +216,18 @@ RectTransform:
   m_AnchoredPosition: {x: 111.55786, y: -1025.0226}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &152087078
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 152087074}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e07f12bf31c9f246a3bbc3606abad6a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -232,7 +238,6 @@ GameObject:
   m_Component:
   - component: {fileID: 705507995}
   - component: {fileID: 705507994}
-  - component: {fileID: 705507996}
   m_Layer: 0
   m_Name: Directional Light
   m_TagString: Untagged
@@ -315,24 +320,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
---- !u!114 &705507996
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 705507993}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6c2e0eccbf331f14bbb85148ac75a5f7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  addWindowGUI: 1
-  initFFPFindRoad: 0
-  server: 0
-  client: 0
-  uiCamera: {fileID: 0}
-  uiCanvas: {fileID: 0}
 --- !u!1 &823086349
 GameObject:
   m_ObjectHideFlags: 0
@@ -500,7 +487,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1979019862
 RectTransform:
   m_ObjectHideFlags: 0

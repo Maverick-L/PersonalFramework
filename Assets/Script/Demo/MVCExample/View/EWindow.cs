@@ -5,5 +5,7 @@
 public enum EWindow
 {
     None,
-    ViewExample,
+    MVCExample_View2,
+    MVCExample_View1,
+    MVCExample_View3,
 }

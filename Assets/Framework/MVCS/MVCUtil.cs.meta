@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<< HEAD:Assets/Framework/MVCS/View/UIAutoCreateCS/BaseUINode.cs.meta
 guid: 625e504c948875b4ca553dd26bb7d2e2
+=======
+guid: 1e9e6eda007f2544cac2e28caaff98bd
+>>>>>>> 16296964ce21e044f23f750fa7c7f8a2db516543:Assets/Framework/MVCS/MVCUtil.cs.meta
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2

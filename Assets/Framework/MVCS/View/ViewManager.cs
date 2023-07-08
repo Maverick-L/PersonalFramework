@@ -10,42 +10,83 @@ namespace Framework.MVC
     public enum EWindowType
     {
         //normal界面
-        Normal = 1<<0,
+        Normal = 0,
         //弹窗
-        Popup = 1<<1,
+        Popup = 1,
         //固定界面弹窗
-        Fixed = 1<<2,
+        Fixed = 2,
     }
-    public class ViewManager :MonoBehaviour
+
+    /// <summary>
+    /// 窗口状态
+    /// </summary>
+    public enum EWindowState
     {
+        /// <summary>
+        /// 加载中
+        /// </summary>
+        Loading,
+        /// <summary>
+        /// 展示
+        /// </summary>
+        Show,
+        /// <summary>
+        /// 关闭
+        /// </summary>
+        Close,
+        /// <summary>
+        /// 缓存
+        /// </summary>
+        Cache,
+        /// <summary>
+        /// 移除
+        /// </summary>
+        Destroy,
+    }
+
+    public class WindowItem : IComparer<WindowItem>,IEquatable<WindowItem>
+    {
+        public EWindowState eState;
+        public EWindowType eType;
+        public EWindow eWindow;
+        public BaseViewWindow window;
+        public BaseWindowParams param;
+        public int viewID;
+
+        public int Compare(WindowItem x, WindowItem y)
+        {
+            return x.eWindow.CompareTo(y);
+        }
+
+        public bool Equals(WindowItem other)
+        {
+            return eWindow == other.eWindow;
+        }
+
+
+    }
+
+    public partial class ViewManager :MonoBehaviour
+    {
+        public static ViewManager instance;
         //ui Camera
         private Camera _uiCamera;
-        // 返回上一级处理
-        // 缓存个数
-        // 弹窗多开
-        // 父子界面
-        //携带参数
         //缓存
         private readonly int cacheMax = 5;
-        private Dictionary<EWindow, BaseViewWindow> _cacheMap = new Dictionary<EWindow, BaseViewWindow>();
+        private Dictionary<EWindow, WindowItem> _cacheMap = new Dictionary<EWindow, WindowItem>();
 
         /// <summary>
-        /// 根据EWindowType 来获取显示的堆栈情况。
+        /// 窗口Item字典
         /// </summary>
-        private Dictionary<EWindowType, Stack<BaseViewWindow>> _showStack = new Dictionary<EWindowType, Stack<BaseViewWindow>>();
+        private Dictionary<int, WindowItem> _window = new Dictionary<int, WindowItem>();
         /// <summary>
-        /// 加载中的界面
+        /// 显示栈。
         /// </summary>
-        private HashSet<EWindow> _loadingMap = new HashSet<EWindow>();
+        private Stack<BaseViewWindow> _showStack = new Stack<BaseViewWindow>();
         /// <summary>
-        /// 等待加载的界面
+        /// 返回上一层使用的栈
         /// </summary>
-        private Queue<EWindow> _waitLoadQueue = new Queue<EWindow>();
-        /// <summary>
-        /// 展示面板排队使用的协程
-        /// </summary>
-        private Coroutine _showCoroutine;
-
+        private Stack<WindowItem> _goBackStack = new Stack<WindowItem>();
         //显示层级
         private int _orderLayer = 1000;
         private int _orderStep = 20;//每开一个界面增加层级
@@ -56,31 +97,36 @@ namespace Framework.MVC
         
         public void OnInitlization(Camera uiCamera)
         {
-            _showStack.Add(EWindowType.Fixed, new Stack<BaseViewWindow>());
-            _showStack.Add(EWindowType.Normal, new Stack<BaseViewWindow>());
-            _showStack.Add(EWindowType.Popup, new Stack<BaseViewWindow>());
             _uiCamera = uiCamera;
             _uiCamera.transform.position = new Vector3(9999, 9999, 9999);
             _uiCamera.clearFlags = CameraClearFlags.Depth;
-            _uiCamera.cullingMask = LayerMask.NameToLayer("UI");
-            _uiCamera.orthographicSize = 0;
+            _uiCamera.cullingMask = 1 << LayerMask.NameToLayer("UI");
             _uiCamera.allowHDR = false;
             _uiCamera.allowMSAA = false;
             _orderStep = 20;
+            _uiCamera.depth = -1;
         }
 
-        public void OnShow(EWindow window, BaseWindowParams param = null)
+        public Coroutine OnShow(EWindow window, BaseWindowParams param = null)
         {
-            if (!_loadingMap.Add(window))
+            WindowItem item;
+            if (_cacheMap.TryGetValue(window, out item))
             {
-                throw new Exception($"被加载的资源正在加载中");
+                item.param = param;
+                item.eState = EWindowState.Show;
             }
-            _loadingMap.Add(window);
-            _waitLoadQueue.Enqueue(window);
-            if (_showCoroutine == null)
+            else
             {
-                _showCoroutine = StartCoroutine(CoShowWindow(window, false, param));
+                item = new WindowItem()
+                {
+                    eWindow = window,
+                    param = param,
+                    eState = EWindowState.Loading
+                };
             }
+            item.viewID = NewViewID();
+            _window.Add(item.viewID, item);
+            return StartCoroutine(CoRealShowWindow(item));
         }
 
         /// <summary>
@@ -89,15 +135,25 @@ namespace Framework.MVC
         /// <param name="window"></param>
         public void OnClose(BaseViewWindow window)
         {
-            StartCoroutine(CoCloseWindow(window.viewConfig.windowType, window.viewConfig.viewID));
+            StartCoroutine(CoCloseWindow(window.viewConfig.windowType, window.viewID));
         }
 
         /// <summary>
         /// 返回上层界面
         /// </summary>
-        public void OnBack()
+        public void OnBack(EWindow normalWindow,BaseWindowParams parmas = null)
         {
-
+            if(_goBackStack.Count > 0)
+            {
+                var lastItem = _goBackStack.Pop();
+                normalWindow = lastItem.eWindow;
+                parmas = lastItem.param;
+            }
+            if(parmas == null)
+            {
+                parmas = new BaseWindowParams() { _isback = true };
+            }
+            OnShow(normalWindow, parmas);
         }
 
         /// <summary>
@@ -120,94 +176,62 @@ namespace Framework.MVC
         /// <summary>
         /// 缓存窗口
         /// </summary>
-        /// <param name="window"></param>
-        private void CacheWindow(BaseViewWindow window)
+        /// <param name="windowItem"></param>
+        private void CacheWindow(WindowItem windowItem)
         {
-            if (window.viewConfig.cache)
+            if (windowItem.window.viewConfig.cache)
             {
                 if (_cacheMap.Count >= cacheMax)
                 {
                     var key = _cacheMap.Keys.GetEnumerator().Current;
                     var removeWindow = _cacheMap[key];
-                    GameObject.DestroyImmediate(removeWindow.gameObject);
+                    GameObject.DestroyImmediate(removeWindow.window.gameObject);
+                    ClearObjCache(removeWindow.eWindow);
+                    removeWindow.eState = EWindowState.Destroy;
                     _cacheMap.Remove(key);
                 }
-                window.gameObject.SetActive(false);
-                _cacheMap.Add(window.viewConfig.window, window);
+                windowItem.window.gameObject.SetActive(false);
+                _cacheMap.Add(windowItem.window.viewConfig.window, windowItem);
+                windowItem.eState = EWindowState.Cache;
             }
             else
             {
-                GameObject.DestroyImmediate(window.gameObject);
-            }
-            
-        }
-        
-        /// <summary>
-        /// 排序展示界面窗口
-        /// </summary>
-        /// <param name="window"></param>
-        /// <param name="isParent">父窗口可以优先展示</param>
-        /// <param name="param"></param>
-        /// <returns></returns>
-        private IEnumerator CoShowWindow(EWindow window, bool isParent, BaseWindowParams param = null)
-        {
-            BaseViewWindow view = null;
-            do
-            {
-                if (!isParent)
-                {
-                    window = _waitLoadQueue.Dequeue();
-                }
-                if (_cacheMap.ContainsKey(window))
-                {
-                    view = _cacheMap[window];
-                    StartCoroutine(CoRealShowWindow(view, param));
-                }
-                else
-                {
-                    yield return CoLoadWindow(window, view);
-                    if (view != null)
-                    {
-                        yield return CoRealShowWindow(view, param);
-                    }
-                }
-            } while (!isParent && _waitLoadQueue.Count > 0);
-
-            if (!isParent)
-            {
-                _showCoroutine = null;
-
+                GameObject.DestroyImmediate(windowItem.window.gameObject);
+                windowItem.eState = EWindowState.Destroy;
+                ClearObjCache(windowItem.eWindow);
             }
 
-            yield return null;
         }
 
         /// <summary>
         /// 展示窗口
         /// </summary>
-        /// <param name="view"></param>
-        /// <param name="param"></param>
+        /// <param name="WindowItem">item</param>
         /// <returns></returns>
-        private IEnumerator CoRealShowWindow(BaseViewWindow view, BaseWindowParams param)
+        private IEnumerator CoRealShowWindow(WindowItem item)
         {
-            var viewConf = view.viewConfig;
-            _loadingMap.Remove(viewConf.window);
-            view.setViewID = NewViewID();
+            if(item.eState == EWindowState.Loading)
+            {
+                yield return CoLoadWindow(item);
+            }
+            BaseViewWindow view = item.window;
+            var viewConf = item.window.viewConfig;
+            item.window.viewID = item.viewID;
             if (viewConf.windowType == EWindowType.Normal)
             {
                 //Normal 的窗口需要关闭当前所有的窗口
                 yield return CoCloseWindow(EWindowType.Normal, -1, viewConf.parentWindow);
             }
-            //等待父窗口开启之后在开启当前窗口。
-            if (viewConf.parentWindow !=  EWindow.None )
+            //开启父面板
+            if (viewConf.parentWindow != EWindow.None && _showStack.Peek() && _showStack.Peek().viewConfig.window != viewConf.parentWindow)
             {
-                if(_showStack[viewConf.windowType].Count == 0 || _showStack[viewConf.windowType].Peek().viewConfig.window != viewConf.parentWindow)
-                {
-                    yield return CoShowWindow(viewConf.parentWindow, true);
-                }
+                Coroutine baseLoad = OnShow(viewConf.parentWindow);
+                
+                yield return baseLoad;
             }
+           
 
-            view.setMediator = Activator.CreateInstance(Type.GetType(viewConf.viewMediatorName)) as BaseViewMediator;
+            view.mediator = Activator.CreateInstance(Type.GetType(viewConf.viewMediatorName)) as BaseViewMediator;
             view.gameObject.SetActive(true);
             if(viewConf.windowType == EWindowType.Fixed)
             {
@@ -215,48 +239,26 @@ namespace Framework.MVC
             }
             else
             {
-                view.GetComponent<Canvas>().sortingOrder = _orderLayer + (_showStack[EWindowType.Normal].Count + _showStack[EWindowType.Popup].Count) * _orderStep;
+                view.GetComponent<Canvas>().sortingOrder = _orderLayer + _showStack.Count * _orderStep;
             }
+            //在动画播放完毕之前不允许点击事件
             GraphicRaycaster _renderer = view.GetComponent<GraphicRaycaster>();
             _renderer.enabled = false;
-            viewConf.viewMediator.OnCreate(view, param);
-            _showStack[viewConf.windowType].Push(view);
+            view.mediator.OnCreate(view, item.param);
+            _showStack.Push(view);
+            
             StartCoroutine(CoPlayAnimatior(view, true, () =>
             {
-                _renderer.enabled = true;
+                if (_renderer)
+                {
+                    _renderer.enabled = true;
+                }
 
             }));
             
         }
 
-        /// <summary>
-        /// 加载预制件资源
-        /// </summary>
-        /// <param name="window"></param>
-        /// <param name="param"></param>
-        /// <returns></returns>
-        private IEnumerator CoLoadWindow(EWindow window, BaseViewWindow view)
-        {
-            //加载界面资源
-            string path = "Assets/data/prefab/" + window.ToString()+".prefab";
-#if UNITY_EDITOR
-           GameObject  go = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(path);
-#endif
-            if(go == null)
-            {
-                throw new Exception($"资源加载错误:{path}");
-            }
-            //加载完成
-            go = GameObject.Instantiate<GameObject>(go);
-            view = go.GetComponent<BaseViewWindow>();
-            go.gameObject.SetActive(false);
-            Canvas canvas = go.GetComponent<Canvas>();
-            canvas.worldCamera = _uiCamera;
-            canvas.renderMode = RenderMode.ScreenSpaceCamera;
-            go.layer = LayerMask.NameToLayer("UI");
-            GameObject.DontDestroyOnLoad(go);
-            yield return null;
-        }
+
 
         /// <summary>
         /// 关闭窗口，
@@ -267,53 +269,54 @@ namespace Framework.MVC
         /// <returns></returns>
         private IEnumerator CoCloseWindow(EWindowType windowType,int removeID = -1,EWindow retain = EWindow.None)
         {
-            var showWindow = _showStack[windowType];
             Queue<BaseViewWindow> allClose = new Queue<BaseViewWindow>();
-            if(removeID != -1)
+            Stack<BaseViewWindow> retainWindow = new Stack<BaseViewWindow>();
+            if(removeID == -1)
             {
-                Stack<BaseViewWindow> temp = new Stack<BaseViewWindow>();
-                while(showWindow.Count > 0)
+                while(_showStack.Count > 0)
                 {
-                    var view = showWindow.Pop();
-                    if(view.viewConfig.viewID == removeID)
+                    var window = _showStack.Pop();
+                    if(window.viewConfig.window == retain)
                     {
-                        allClose.Enqueue(view);
-                        break;
+                        retainWindow.Push(window);
                     }
-                    temp.Push(view);
-                }
-                while(temp.Count > 0)
-                {
-                    showWindow.Push(temp.Pop());
-                }
-            }
-            else if(retain != EWindow.None)
-            {
-                while(showWindow.Count > 0)
-                {
-                    var view = showWindow.Peek();
-                    if(view.viewConfig.window == retain)
+                    else
                     {
-                        break;
+                        allClose.Enqueue(window);
                     }
-                    allClose.Enqueue(showWindow.Pop());
                 }
             }
             else
             {
-                while(showWindow.Count > 0)
+                while(_showStack.Count > 0)
                 {
-                    allClose.Enqueue(showWindow.Pop());
+                    var window = _showStack.Pop();
+
+                    if (removeID == window.viewID)
+                    {
+                        allClose.Enqueue(window);
+                    }
+                    else
+                    {
+                        retainWindow.Push(window);
+                    }
                 }
+            }
+            while(retainWindow.Count > 0)
+            {
+                _showStack.Push(retainWindow.Pop());
             }
             while (allClose.Count > 0)
             {
                 var view = allClose.Dequeue();
-                view.viewConfig.viewMediator.OnDestory();
-                view.setMediator = null;
-                ReleaseViewID(view.viewConfig.viewID);
+                view.mediator.OnDestory();
+                view.mediator = null;
+                ReleaseViewID(view.viewID);
+                WindowItem item = _window[view.viewID];
+                item.eState = EWindowState.Close;
+                _window.Remove(view.viewID);
                 yield return CoPlayAnimatior(view, false);
-                CacheWindow(view);
+                CacheWindow(item);
             }
             yield return null;
         }

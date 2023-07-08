@@ -18,6 +18,18 @@ namespace Framework.MVC
 
     public class ModelManager : MessageBase
     {
+        private static ModelManager _instance;
+        internal static ModelManager instance
+        {
+            get
+            {
+                if(_instance == null)
+                {
+                    _instance = new ModelManager();
+                }
+                return _instance;
+            }
+        }
         //实现纯数据的Model，采用ECS中Commponent的思想
         private  Dictionary<Type, long> _modelMemoryIndex;
         private  byte[] _modelMemory;
@@ -43,6 +55,8 @@ namespace Framework.MVC
         {
             _modelMemory = null;
             _modelMemoryIndex?.Clear();
+            _instance = null;
+
             Dispose();
             GC.Collect();
         }
