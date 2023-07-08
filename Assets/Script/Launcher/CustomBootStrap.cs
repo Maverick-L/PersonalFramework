@@ -35,11 +35,11 @@ public class CustomBootStrap : ICustomBootstrap
         //logicGroup.SortSystems();
         //simulationSystem.SortSystems();
         DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(logicWorld, GetAllSystemType(typeof(LogicUpdateGroup)));
-        ScriptBehaviourUpdateOrder.UpdatePlayerLoop(logicWorld,PlayerLoop.GetCurrentPlayerLoop());
+       // ScriptBehaviourUpdateOrder.AppendSystem(logicWorld,PlayerLoop.GetCurrentPlayerLoop());
 
         //方法2：
         DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(renderWorld, GetAllSystemType(typeof(RenderUpdateGroup)));
-        ScriptBehaviourUpdateOrder.UpdatePlayerLoop(renderWorld, PlayerLoop.GetCurrentPlayerLoop());
+      //  ScriptBehaviourUpdateOrder.UpdatePlayerLoop(renderWorld, PlayerLoop.GetCurrentPlayerLoop());
 
         return true;
     }

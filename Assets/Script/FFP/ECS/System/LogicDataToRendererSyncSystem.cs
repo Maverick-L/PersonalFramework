@@ -6,7 +6,7 @@ using Unity.Entities;
 
 [UpdateInGroup(typeof(LogicUpdateGroup), OrderLast = true)]
 [UpdateAfter(typeof(EndLogicSystemEntityCommandBufferSystem))]
-public class LogicDataToRendererSyncSystem : SystemBase
+public partial class LogicDataToRendererSyncSystem : SystemBase
 {
     BeginRenderSystemEntityCommandBufferSystem _renderSyscPoint;
     protected override void OnCreate()

@@ -26,7 +26,7 @@ public class WindowGUI : MonoBehaviour
             DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(CustomBootStrap.GetWorld(Global.LOGIC_WORLD_NAME),allSystem);
 
             DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(CustomBootStrap.GetWorld(Global.LOGIC_WORLD_NAME),
-                typeof(RenderMeshSystemV2));
+                typeof(HybridRendererSystem));
 
         }
 
