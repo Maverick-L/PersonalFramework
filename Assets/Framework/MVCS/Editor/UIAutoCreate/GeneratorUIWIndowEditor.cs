@@ -88,7 +88,7 @@ public class GeneratorUIWIndowEditor
     }
     private static void OnWriteClass(StreamWriter write,GameObject root)
     {
-        write.WriteLine($"public class {root.transform.root.name} : Framework.MVC.BaseViewWindow");
+        write.WriteLine($"public partial class {root.transform.root.name} : Framework.MVC.BaseViewWindow");
         write.WriteLine(@"{");
     }
 

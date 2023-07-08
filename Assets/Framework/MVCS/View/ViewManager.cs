@@ -27,9 +27,17 @@ namespace Framework.MVC
         /// </summary>
         Loading,
         /// <summary>
+        /// 播放进入动画中
+        /// </summary>
+        ShowAni,
+        /// <summary>
         /// 展示
         /// </summary>
         Show,
+        /// <summary>
+        /// 播放退出动画中
+        /// </summary>
+        CloseAni,
         /// <summary>
         /// 关闭
         /// </summary>
@@ -130,6 +138,20 @@ namespace Framework.MVC
         }
 
         /// <summary>
+        /// Push 和 Back两个方法同时使用，在使用Push打开一个界面的时候，会将当前的界面压入返回栈中，调用back方法会返回这个界面。
+        /// 当前展示的窗口和目标需要打开的窗口不可以都是Popur或者都是Fixed类型的窗口
+        /// </summary>
+        /// <param name="window"></param>
+        /// <param name="param"></param>
+        public void OnPush(EWindow window,BaseWindowParams param = null)
+        {
+            BaseViewWindow backWindow = _showStack.Pop();
+            WindowItem backItem = _window[backWindow.viewID];
+            OnPushGoBackStack(backItem);
+            OnShow(window, param);
+        }
+
+        /// <summary>
         /// 关闭界面
         /// </summary>
         /// <param name="window"></param>
@@ -151,9 +173,34 @@ namespace Framework.MVC
             }
             if(parmas == null)
             {
-                parmas = new BaseWindowParams() { _isback = true };
+                parmas = new BaseWindowParams();
             }
+            parmas._isback = true;
             OnShow(normalWindow, parmas);
+        }
+
+        /// <summary>
+        /// 压入返回栈算法,如果栈内已经有了当前的窗口时删除顶层到目标窗口的所有窗口
+        /// </summary>
+        /// <param name="item"></param>
+        private void OnPushGoBackStack(WindowItem item)
+        {
+            Stack<WindowItem> temp = new Stack<WindowItem>();
+            while (_goBackStack.Count > 0)
+            {
+                WindowItem pop = _goBackStack.Pop();
+                if(item.eWindow == pop.eWindow)
+                {
+                    temp.Clear();
+                    temp.Push(item);
+                    break;
+                }
+                temp.Push(pop);
+            }
+            while (temp.Count > 0)
+            {
+                _goBackStack.Push(temp.Pop());
+            }
         }
 
         /// <summary>
@@ -185,9 +232,7 @@ namespace Framework.MVC
                 {
                     var key = _cacheMap.Keys.GetEnumerator().Current;
                     var removeWindow = _cacheMap[key];
-                    GameObject.DestroyImmediate(removeWindow.window.gameObject);
-                    ClearObjCache(removeWindow.eWindow);
-                    removeWindow.eState = EWindowState.Destroy;
+                    DestroyWindow(removeWindow);
                     _cacheMap.Remove(key);
                 }
                 windowItem.window.gameObject.SetActive(false);
@@ -196,11 +241,17 @@ namespace Framework.MVC
             }
             else
             {
-                GameObject.DestroyImmediate(windowItem.window.gameObject);
-                windowItem.eState = EWindowState.Destroy;
-                ClearObjCache(windowItem.eWindow);
+                DestroyWindow(windowItem);
             }
 
+        }
+
+        private void DestroyWindow(WindowItem windowItem)
+        {
+            GameObject.DestroyImmediate(windowItem.window.gameObject);
+            windowItem.window.mediator = null;
+            windowItem.eState = EWindowState.Destroy;
+            ClearObjCache(windowItem.eWindow);
         }
 
         /// <summary>
@@ -229,9 +280,11 @@ namespace Framework.MVC
                 
                 yield return baseLoad;
             }
-           
 
-            view.mediator = Activator.CreateInstance(Type.GetType(viewConf.viewMediatorName)) as BaseViewMediator;
+            if (view.mediator == null)
+            {
+                view.mediator = Activator.CreateInstance(Type.GetType(viewConf.viewMediatorName)) as BaseViewMediator;
+            }
             view.gameObject.SetActive(true);
             if(viewConf.windowType == EWindowType.Fixed)
             {
@@ -246,12 +299,13 @@ namespace Framework.MVC
             _renderer.enabled = false;
             view.mediator.OnCreate(view, item.param);
             _showStack.Push(view);
-            
+            item.eState = EWindowState.ShowAni;
             StartCoroutine(CoPlayAnimatior(view, true, () =>
             {
                 if (_renderer)
                 {
                     _renderer.enabled = true;
+                    item.eState = EWindowState.Show;
                 }
 
             }));
@@ -310,12 +364,12 @@ namespace Framework.MVC
             {
                 var view = allClose.Dequeue();
                 view.mediator.OnDestory();
-                view.mediator = null;
                 ReleaseViewID(view.viewID);
                 WindowItem item = _window[view.viewID];
-                item.eState = EWindowState.Close;
+                item.eState = EWindowState.CloseAni;
                 _window.Remove(view.viewID);
                 yield return CoPlayAnimatior(view, false);
+                item.eState = EWindowState.Close;
                 CacheWindow(item);
             }
             yield return null;
@@ -357,7 +411,6 @@ namespace Framework.MVC
                     ani.OnClose(() =>
                     {
                         show = false;
-                        ani.StopAllCoroutines();
                         callback?.Invoke();
                     });
                 }

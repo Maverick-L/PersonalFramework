@@ -10,7 +10,7 @@ namespace Framework.MVC
     public partial class ViewManager
     {
         /// <summary>
-        /// 加载完成的列表实例
+        /// 加载完成的窗口，未实例化的GameObject
         /// </summary>
         private Dictionary<EWindow, GameObject> _windowObj = new Dictionary<EWindow, GameObject>();
 
@@ -54,7 +54,6 @@ namespace Framework.MVC
             GameObject.DontDestroyOnLoad(go);
             item.window = go.GetComponent<BaseViewWindow>();
             _windowObjRefreshCount[item.eWindow]++;
-            item.eState = EWindowState.Show;
             yield return null;
         }
 

@@ -4,7 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-public class MVCExample_View1 : Framework.MVC.BaseViewWindow
+public partial class MVCExample_View1 : Framework.MVC.BaseViewWindow
 {
     public Text titleText;
     public Button closeButtonButton;
