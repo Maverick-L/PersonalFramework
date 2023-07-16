@@ -11,12 +11,12 @@ namespace Framework.MVC
             ModelManager.instance.OnInitModel();
             ViewManager.instance = camera.gameObject.GetComponent<ViewManager>();
             ViewManager.instance.OnInitlization(camera);
-            ViewManager.instance.OnShow(EWindow.MVCExample_View1);
-            
+            BaseContraller.OnInitContraller();
         }
         public void OnDestroy()
         {
             ModelManager.instance.OnDestoryModel();
+            BaseContraller.OnDestroy();
         }
         
     }

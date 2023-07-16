@@ -12,7 +12,7 @@ namespace Framework.MVC
         /// <summary>
         /// 加载完成的窗口，未实例化的GameObject
         /// </summary>
-        private Dictionary<EWindow, GameObject> _windowObj = new Dictionary<EWindow, GameObject>();
+        private Dictionary<EWindow, AssetLoader<GameObject>> _windowObj = new Dictionary<EWindow, AssetLoader<GameObject>>();
 
         private Dictionary<EWindow, int> _windowObjRefreshCount = new Dictionary<EWindow, int>();
 
@@ -27,20 +27,19 @@ namespace Framework.MVC
             GameObject obj;
             if (_windowObj.ContainsKey(item.eWindow))
             {
-                obj = _windowObj[item.eWindow];
+                obj = _windowObj[item.eWindow].Current;
             }
             else
             {
                 //加载界面资源
                 string path = "Assets/" + MVCUtil.PREFAB_PATH + "/" + item.eWindow.ToString() + ".prefab";
-#if UNITY_EDITOR
-                obj = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(path);
-#endif
-                if (obj == null)
+                AssetLoader<GameObject> loader = new AssetLoader<GameObject>(path, true);
+                while(loader.finsh)
                 {
-                    throw new Exception($"资源加载错误:{path}");
+                    yield return null;
                 }
-                _windowObj.Add(item.eWindow, obj);
+                obj = loader.Current;
+                _windowObj.Add(item.eWindow, loader);
                 _windowObjRefreshCount.Add(item.eWindow, 0);
             }
             //加载完成
@@ -89,11 +88,9 @@ namespace Framework.MVC
         /// 移除obj
         /// </summary>
         /// <param name="obj"></param>
-        private void ClearObj(GameObject obj)
+        private void ClearObj(AssetLoader<GameObject> obj)
         {
-#if UNITY_EDITOR
             obj = null;
-#endif
         }
 
     }
